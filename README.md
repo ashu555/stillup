@@ -4,7 +4,7 @@ Uptime + cron heartbeat monitoring platform. Step 1: foundation (auth, organizat
 
 ## Stack
 
-- Laravel 11 / PHP 8.3
+- Laravel 11 / PHP 8.4
 - MySQL 8
 - Redis (queues + cache)
 - Laravel Sanctum
@@ -31,7 +31,7 @@ Mailhog UI: http://localhost:8025
 
 ## Local (without Docker)
 
-Requires PHP 8.3, Composer, MySQL, Redis, Node 18+.
+Requires PHP 8.4, Composer, MySQL, Redis, Node 18+.
 
 ```bash
 cp .env.example .env
