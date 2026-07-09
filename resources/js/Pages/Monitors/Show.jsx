@@ -1,30 +1,14 @@
+import CopyButton from '@/Components/CopyButton';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
+import {
+    StatusBadge,
+    TypeBadge,
+    formatDateTime,
+    formatRelativeTime,
+} from '@/Components/StatusBadge';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router } from '@inertiajs/react';
-
-const statusStyles = {
-    up: 'bg-green-100 text-green-800',
-    down: 'bg-red-100 text-red-800',
-    degraded: 'bg-orange-100 text-orange-800',
-    paused: 'bg-gray-100 text-gray-700',
-    pending: 'bg-amber-100 text-amber-800',
-};
-
-function StatusBadge({ status }) {
-    return (
-        <span
-            className={`inline-flex rounded px-2 py-0.5 text-xs font-medium uppercase tracking-wide ${statusStyles[status] ?? 'bg-gray-100 text-gray-700'}`}
-        >
-            {status}
-        </span>
-    );
-}
-
-function formatCheckedAt(value) {
-    if (!value) return '—';
-    return new Date(value).toLocaleString();
-}
 
 export default function Show({
     organization,
@@ -61,8 +45,11 @@ export default function Show({
                         <h2 className="text-xl font-semibold leading-tight text-gray-800">
                             {monitor.name}
                         </h2>
-                        <p className="mt-1 text-sm text-gray-500">
-                            {organization.name} / {project.name}
+                        <p className="mt-1 flex items-center gap-2 text-sm text-gray-500">
+                            <TypeBadge type={monitor.type} />
+                            <span>
+                                {organization.name} / {project.name}
+                            </span>
                         </p>
                     </div>
                     <div className="flex items-center gap-2">
@@ -144,8 +131,13 @@ export default function Show({
                                         <dt className="text-sm text-gray-500">
                                             Ping URL
                                         </dt>
-                                        <dd className="mt-1 break-all rounded bg-gray-50 p-3 font-mono text-sm text-gray-900">
-                                            {monitor.config.ping_url}
+                                        <dd className="mt-1 flex flex-wrap items-start gap-2">
+                                            <code className="break-all rounded bg-gray-50 p-3 font-mono text-sm text-gray-900">
+                                                {monitor.config.ping_url}
+                                            </code>
+                                            <CopyButton
+                                                value={monitor.config.ping_url}
+                                            />
                                         </dd>
                                         <p className="mt-2 text-xs text-gray-500">
                                             Example:{' '}
@@ -177,9 +169,16 @@ export default function Show({
                                         Last heartbeat
                                     </dt>
                                     <dd className="mt-1 text-gray-900">
-                                        {formatCheckedAt(
+                                        {formatRelativeTime(
                                             monitor.config.last_heartbeat_at,
-                                        )}
+                                        )}{' '}
+                                        <span className="text-xs text-gray-500">
+                                            (
+                                            {formatDateTime(
+                                                monitor.config.last_heartbeat_at,
+                                            )}
+                                            )
+                                        </span>
                                     </dd>
                                 </div>
                                 <div>
@@ -187,7 +186,7 @@ export default function Show({
                                         Last status change
                                     </dt>
                                     <dd className="mt-1 text-gray-900">
-                                        {formatCheckedAt(
+                                        {formatDateTime(
                                             monitor.last_status_change_at,
                                         )}
                                     </dd>
@@ -246,9 +245,16 @@ export default function Show({
                                         Last checked
                                     </dt>
                                     <dd className="mt-1 text-gray-900">
-                                        {formatCheckedAt(
+                                        {formatRelativeTime(
                                             monitor.last_checked_at,
-                                        )}
+                                        )}{' '}
+                                        <span className="text-xs text-gray-500">
+                                            (
+                                            {formatDateTime(
+                                                monitor.last_checked_at,
+                                            )}
+                                            )
+                                        </span>
                                     </dd>
                                 </div>
                                 <div>
@@ -256,7 +262,7 @@ export default function Show({
                                         Last status change
                                     </dt>
                                     <dd className="mt-1 text-gray-900">
-                                        {formatCheckedAt(
+                                        {formatDateTime(
                                             monitor.last_status_change_at,
                                         )}
                                     </dd>
@@ -303,7 +309,7 @@ export default function Show({
                                     {checkResults.map((result) => (
                                         <tr key={result.id}>
                                             <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-700">
-                                                {formatCheckedAt(
+                                                {formatDateTime(
                                                     result.checked_at,
                                                 )}
                                             </td>

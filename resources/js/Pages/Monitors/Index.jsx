@@ -1,35 +1,17 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import PrimaryButton from '@/Components/PrimaryButton';
+import {
+    StatusBadge,
+    TypeBadge,
+    formatRelativeTime,
+} from '@/Components/StatusBadge';
 import { Head, Link } from '@inertiajs/react';
-
-const statusStyles = {
-    up: 'bg-green-100 text-green-800',
-    down: 'bg-red-100 text-red-800',
-    degraded: 'bg-orange-100 text-orange-800',
-    paused: 'bg-gray-100 text-gray-700',
-    pending: 'bg-amber-100 text-amber-800',
-};
-
-function StatusBadge({ status }) {
-    return (
-        <span
-            className={`inline-flex rounded px-2 py-0.5 text-xs font-medium uppercase tracking-wide ${statusStyles[status] ?? 'bg-gray-100 text-gray-700'}`}
-        >
-            {status}
-        </span>
-    );
-}
 
 function formatInterval(seconds) {
     if (seconds < 60) return `${seconds}s`;
     if (seconds % 3600 === 0) return `${seconds / 3600}h`;
     if (seconds % 60 === 0) return `${seconds / 60}m`;
     return `${seconds}s`;
-}
-
-function formatCheckedAt(value) {
-    if (!value) return 'Never';
-    return new Date(value).toLocaleString();
 }
 
 export default function Index({ organization, project, monitors, can }) {
@@ -46,6 +28,16 @@ export default function Index({ organization, project, monitors, can }) {
                         </p>
                     </div>
                     <div className="flex items-center gap-3">
+                        {project.public_status_enabled && (
+                            <a
+                                href={route('status.show', project.slug)}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="text-sm text-indigo-600 hover:text-indigo-800"
+                            >
+                                Public status
+                            </a>
+                        )}
                         <Link
                             href={route(
                                 'organizations.projects.incidents.index',
@@ -97,11 +89,11 @@ export default function Index({ organization, project, monitors, can }) {
                     {monitors.length === 0 ? (
                         <div className="bg-white p-8 shadow-sm sm:rounded-lg">
                             <p className="text-gray-600">
-                                No monitors yet. Create an HTTP monitor to start
-                                checking endpoints.
+                                No monitors yet. Create an HTTP or heartbeat
+                                monitor to start watching production.
                             </p>
                             {can.create && (
-                                <div className="mt-4">
+                                <div className="mt-4 flex flex-wrap gap-3">
                                     <Link
                                         href={route(
                                             'organizations.projects.monitors.create',
@@ -111,6 +103,15 @@ export default function Index({ organization, project, monitors, can }) {
                                         <PrimaryButton>
                                             Create HTTP monitor
                                         </PrimaryButton>
+                                    </Link>
+                                    <Link
+                                        href={route(
+                                            'organizations.projects.monitors.create-heartbeat',
+                                            [organization.slug, project.slug],
+                                        )}
+                                        className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 shadow-sm hover:bg-gray-50"
+                                    >
+                                        Create heartbeat
                                     </Link>
                                 </div>
                             )}
@@ -139,7 +140,7 @@ export default function Index({ organization, project, monitors, can }) {
                                             Interval
                                         </th>
                                         <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                                            Last checked
+                                            Last check
                                         </th>
                                     </tr>
                                 </thead>
@@ -164,8 +165,8 @@ export default function Index({ organization, project, monitors, can }) {
                                                     {monitor.name}
                                                 </Link>
                                             </td>
-                                            <td className="px-4 py-3 text-sm uppercase tracking-wide text-gray-500">
-                                                {monitor.type}
+                                            <td className="px-4 py-3">
+                                                <TypeBadge type={monitor.type} />
                                             </td>
                                             <td className="max-w-xs truncate px-4 py-3 text-sm text-gray-600">
                                                 {monitor.type === 'http'
@@ -210,8 +211,11 @@ export default function Index({ organization, project, monitors, can }) {
                                                 )}
                                             </td>
                                             <td className="px-4 py-3 text-sm text-gray-600">
-                                                {formatCheckedAt(
-                                                    monitor.last_checked_at,
+                                                {formatRelativeTime(
+                                                    monitor.type === 'heartbeat'
+                                                        ? monitor.last_heartbeat_at ||
+                                                              monitor.last_checked_at
+                                                        : monitor.last_checked_at,
                                                 )}
                                             </td>
                                         </tr>

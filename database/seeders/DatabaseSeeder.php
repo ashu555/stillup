@@ -90,5 +90,19 @@ class DatabaseSeeder extends Seeder
                 'keyword' => null,
             ]);
         }
+
+        $hasHeartbeat = Monitor::query()
+            ->where('project_id', $project->id)
+            ->where('type', MonitorType::Heartbeat)
+            ->where('name', 'Nightly backup (demo)')
+            ->exists();
+
+        if (! $hasHeartbeat) {
+            app(CreateHeartbeatMonitorAction::class)->execute($user, $project, [
+                'name' => 'Nightly backup (demo)',
+                'expected_every_seconds' => 300,
+                'grace_seconds' => 60,
+            ]);
+        }
     }
 }

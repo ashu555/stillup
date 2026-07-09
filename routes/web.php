@@ -1,11 +1,13 @@
 <?php
 
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\HeartbeatController;
 use App\Http\Controllers\IncidentController;
 use App\Http\Controllers\MonitorController;
 use App\Http\Controllers\OrganizationController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProjectController;
+use App\Http\Controllers\PublicStatusController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -23,9 +25,16 @@ Route::match(['get', 'post', 'head'], '/heartbeat/{token}', HeartbeatController:
     ->where('token', '[A-Za-z0-9]+')
     ->name('heartbeat.ping');
 
-Route::get('/dashboard', function () {
-    return redirect()->route('organizations.index');
-})->middleware(['auth', 'verified'])->name('dashboard');
+Route::get('/status/{slug}.json', [PublicStatusController::class, 'json'])
+    ->where('slug', '[A-Za-z0-9\-]+')
+    ->name('status.json');
+Route::get('/status/{slug}', [PublicStatusController::class, 'show'])
+    ->where('slug', '[A-Za-z0-9\-]+')
+    ->name('status.show');
+
+Route::get('/dashboard', DashboardController::class)
+    ->middleware(['auth', 'verified'])
+    ->name('dashboard');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

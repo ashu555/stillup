@@ -36,7 +36,10 @@ class MonitorController extends Controller
 
         return Inertia::render('Monitors/Index', [
             'organization' => $this->organizationPayload($organization),
-            'project' => $this->projectPayload($project),
+            'project' => [
+                ...$this->projectPayload($project),
+                'public_status_enabled' => $project->public_status_enabled,
+            ],
             'monitors' => $monitors,
             'can' => [
                 'create' => request()->user()->can('create', [Monitor::class, $project]),
@@ -242,6 +245,7 @@ class MonitorController extends Controller
             'is_enabled' => $monitor->is_enabled,
             'interval_seconds' => $monitor->interval_seconds,
             'last_checked_at' => $monitor->last_checked_at?->toIso8601String(),
+            'last_heartbeat_at' => $monitor->heartbeatConfig?->last_heartbeat_at?->toIso8601String(),
             'last_status_change_at' => $monitor->last_status_change_at?->toIso8601String(),
             'url' => $monitor->type === MonitorType::Http
                 ? $monitor->httpConfig?->url

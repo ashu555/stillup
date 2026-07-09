@@ -1,23 +1,8 @@
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
+import StatusBadge from '@/Components/StatusBadge';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router } from '@inertiajs/react';
-
-const statusStyles = {
-    open: 'bg-red-100 text-red-800',
-    acknowledged: 'bg-amber-100 text-amber-800',
-    resolved: 'bg-green-100 text-green-800',
-};
-
-function StatusBadge({ status }) {
-    return (
-        <span
-            className={`inline-flex rounded px-2 py-0.5 text-xs font-medium uppercase tracking-wide ${statusStyles[status] ?? 'bg-gray-100 text-gray-700'}`}
-        >
-            {status}
-        </span>
-    );
-}
 
 function formatTime(value) {
     if (!value) return '—';
@@ -87,6 +72,26 @@ export default function Show({ organization, project, incident, events }) {
                         ← Back to incidents
                     </Link>
 
+                    {(incident.status === 'open' ||
+                        incident.status === 'acknowledged') && (
+                        <div
+                            className={`rounded-lg border px-4 py-3 ${
+                                incident.status === 'open'
+                                    ? 'border-red-300 bg-red-50 text-red-900'
+                                    : 'border-amber-300 bg-amber-50 text-amber-900'
+                            }`}
+                        >
+                            <p className="font-semibold">
+                                {incident.status === 'open'
+                                    ? 'Active incident — needs attention'
+                                    : 'Acknowledged — still unresolved'}
+                            </p>
+                            <p className="mt-1 text-sm opacity-90">
+                                {incident.summary}
+                            </p>
+                        </div>
+                    )}
+
                     <div className="bg-white p-6 shadow-sm sm:rounded-lg">
                         <p className="text-lg text-gray-900">{incident.summary}</p>
                         <dl className="mt-4 grid gap-4 sm:grid-cols-2">
@@ -124,8 +129,8 @@ export default function Show({ organization, project, incident, events }) {
                                 <dt className="text-sm text-gray-500">
                                     Monitor status
                                 </dt>
-                                <dd className="mt-1 text-gray-900">
-                                    {incident.monitor.status}
+                                <dd className="mt-1">
+                                    <StatusBadge status={incident.monitor.status} />
                                 </dd>
                             </div>
                             <div>

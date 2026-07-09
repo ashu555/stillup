@@ -38,12 +38,13 @@ class RecordHeartbeatAction
             throw new HttpException(404, 'Heartbeat token not found.');
         }
 
-        if (! $monitor->is_enabled) {
-            throw new HttpException(403, 'Monitor is disabled.');
-        }
-
+        // Paused: accept ping with no state change (do not treat as disabled).
         if ($monitor->status === MonitorStatus::Paused) {
             return ['monitor' => $monitor, 'status' => 204];
+        }
+
+        if (! $monitor->is_enabled) {
+            throw new HttpException(403, 'Monitor is disabled.');
         }
 
         $monitor = DB::transaction(function () use ($monitor, $config) {

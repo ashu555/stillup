@@ -1,26 +1,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import { StatusBadge, formatDateTime } from '@/Components/StatusBadge';
 import { Head, Link, router } from '@inertiajs/react';
-
-const statusStyles = {
-    open: 'bg-red-100 text-red-800',
-    acknowledged: 'bg-amber-100 text-amber-800',
-    resolved: 'bg-green-100 text-green-800',
-};
-
-function StatusBadge({ status }) {
-    return (
-        <span
-            className={`inline-flex rounded px-2 py-0.5 text-xs font-medium uppercase tracking-wide ${statusStyles[status] ?? 'bg-gray-100 text-gray-700'}`}
-        >
-            {status}
-        </span>
-    );
-}
-
-function formatTime(value) {
-    if (!value) return '—';
-    return new Date(value).toLocaleString();
-}
 
 export default function Index({ organization, project, incidents, filters }) {
     const setStatus = (status) => {
@@ -95,7 +75,11 @@ export default function Index({ organization, project, incidents, filters }) {
 
                     {incidents.length === 0 ? (
                         <div className="bg-white p-8 shadow-sm sm:rounded-lg">
-                            <p className="text-gray-600">No incidents found.</p>
+                            <p className="text-gray-600">
+                                {filters.status
+                                    ? 'No incidents for this filter.'
+                                    : 'All clear. No incidents yet.'}
+                            </p>
                         </div>
                     ) : (
                         <div className="overflow-hidden bg-white shadow-sm sm:rounded-lg">
@@ -125,6 +109,7 @@ export default function Index({ organization, project, incidents, filters }) {
                                             <td className="px-4 py-3">
                                                 <StatusBadge
                                                     status={incident.status}
+                                                    kind="incident"
                                                 />
                                             </td>
                                             <td className="px-4 py-3 text-sm text-gray-900">
@@ -146,7 +131,9 @@ export default function Index({ organization, project, incidents, filters }) {
                                                 </Link>
                                             </td>
                                             <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-600">
-                                                {formatTime(incident.opened_at)}
+                                                {formatDateTime(
+                                                    incident.opened_at,
+                                                )}
                                             </td>
                                         </tr>
                                     ))}

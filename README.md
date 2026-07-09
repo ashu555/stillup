@@ -1,21 +1,12 @@
 # Stillup
 
-Uptime + cron heartbeat monitoring platform.
-
-**Step 1:** foundation (auth, organizations, projects, Docker)  
-**Step 2:** HTTP monitors + scheduled checks  
-**Step 3:** Incidents + email alerts
+Uptime + cron heartbeat monitoring with incidents, email alerts, and public status pages.
 
 ## Stack
 
-- Laravel 11 / PHP 8.3
-- MySQL 8
-- Redis (queues + cache)
-- Laravel Sanctum
-- Inertia.js + React + Tailwind CSS
-- Docker Compose + Mailhog
+Laravel 11 · PHP 8.3 · MySQL 8 · Redis · Sanctum · Inertia React + Tailwind · Docker · Mailhog
 
-## Quick start (Docker)
+## Quick start
 
 ```bash
 cp .env.example .env
@@ -25,52 +16,52 @@ docker compose exec app php artisan migrate --seed
 npm install && npm run build
 ```
 
-App: http://localhost:8080  
-Mailhog UI: http://localhost:8025
+- App: http://localhost:8080  
+- Mailhog: http://localhost:8025  
+- Demo login: `demo@stillup.test` / `password`
 
-### Demo login
+## How it works
 
-- Email: `demo@stillup.test`
-- Password: `password`
+### HTTP monitors
+Stillup checks a URL on a schedule. Success = expected status (+ optional keyword). Failures flip the monitor to **down** and open an incident.
 
-## Verify incidents + email (Step 3)
+### Heartbeat monitors
+Your cron/job pings a unique URL. If Stillup does not hear from it within `expected_every + grace`, the monitor goes **down**.
 
 ```bash
-docker compose exec app php artisan migrate
-php artisan test --filter='IncidentTest|HttpMonitorTest'
+curl -X POST http://localhost:8080/heartbeat/YOUR_TOKEN
+```
 
-# Force checks (scheduler also runs every minute)
+Never-pinged heartbeats stay **pending** (no incident until the first successful ping, then a later miss).
+
+### Incidents + alerts
+- Transition to down → open incident + email owners/admins (Mailhog locally)
+- Recovery → auto-resolve + recovery email
+- Acknowledge from the UI (member+)
+- One active incident per monitor (no spam duplicates)
+
+### Public status page
+Enable on the project settings page, then open:
+
+```
+http://localhost:8080/status/{project-slug}
+http://localhost:8080/status/{project-slug}.json
+```
+
+Public pages never expose heartbeat tokens or HTTP URLs.
+
+### Dashboard
+After login, `/dashboard` shows monitor counts, open/ack incidents, needs-attention lists, and quick actions.
+
+## Verify
+
+```bash
+php artisan test --filter='PublicStatusPageTest|DashboardTest|HeartbeatMonitorTest|HttpMonitorTest|IncidentTest'
 docker compose exec app php artisan schedule:run
-
-# Or run a single due check cycle via queue
-docker compose exec app php artisan queue:work redis --once
 ```
-
-**Demo path**
-
-1. Login → Organizations → Acme → Production → Monitors  
-2. Open **Broken endpoint (demo)** (or create a monitor with a bad URL)  
-3. Wait for scheduler/queue → monitor goes **DOWN** → incident opens  
-4. Check Mailhog for “Incident opened” email  
-5. Acknowledge from Incidents UI  
-6. Point monitor at a healthy URL / wait for recovery → auto-resolve + recovery email  
-
-## Useful commands
-
-```bash
-docker compose exec app bash
-docker compose ps
-npm run dev
-```
-
-## Roles (incidents)
-
-- viewer: view only  
-- member+: acknowledge + manual resolve  
-- admin/owner: receive opened/resolved emails  
 
 ## Scope
 
-**Done:** Docker, auth, orgs/projects, HTTP monitors, incidents, email alerts (Mailhog).
+**Done (Steps 1–5):** auth, orgs/projects, HTTP + heartbeat monitors, incidents/email, public status, dashboard polish.
 
-**Not yet:** Heartbeats, public status pages, Slack/SMS, escalation.
+**Not yet (Step 6+):** Slack/SMS, billing, maintenance windows, custom status domains, subscribers.
