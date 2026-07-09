@@ -3,6 +3,7 @@
 namespace App\Actions;
 
 use App\Enums\MonitorStatus;
+use App\Enums\MonitorType;
 use App\Models\Monitor;
 use App\Models\User;
 use App\Services\AuditLogger;
@@ -32,6 +33,14 @@ class ResumeMonitorAction
             'last_status_change_at' => now(),
         ])->save();
 
+        // Reset heartbeat baseline so resume does not immediately trip a miss.
+        if ($monitor->type === MonitorType::Heartbeat) {
+            $monitor->loadMissing('heartbeatConfig');
+            $monitor->heartbeatConfig?->forceFill([
+                'last_heartbeat_at' => now(),
+            ])->save();
+        }
+
         $this->auditLogger->log(
             action: 'monitor.resumed',
             user: $actor,
@@ -39,6 +48,6 @@ class ResumeMonitorAction
             auditable: $monitor,
         );
 
-        return $monitor->fresh();
+        return $monitor->fresh(['heartbeatConfig', 'httpConfig']);
     }
 }

@@ -128,70 +128,141 @@ export default function Show({
                         <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-500">
                             Configuration
                         </h3>
-                        <dl className="mt-4 grid gap-4 sm:grid-cols-2">
-                            <div>
-                                <dt className="text-sm text-gray-500">URL</dt>
-                                <dd className="mt-1 break-all text-gray-900">
-                                    {monitor.config?.url}
-                                </dd>
-                            </div>
-                            <div>
-                                <dt className="text-sm text-gray-500">Method</dt>
-                                <dd className="mt-1 text-gray-900">
-                                    {monitor.config?.method}
-                                </dd>
-                            </div>
-                            <div>
-                                <dt className="text-sm text-gray-500">
-                                    Expected status
-                                </dt>
-                                <dd className="mt-1 text-gray-900">
-                                    {monitor.config?.expected_status}
-                                </dd>
-                            </div>
-                            <div>
-                                <dt className="text-sm text-gray-500">
-                                    Timeout
-                                </dt>
-                                <dd className="mt-1 text-gray-900">
-                                    {monitor.config?.timeout_seconds}s
-                                </dd>
-                            </div>
-                            <div>
-                                <dt className="text-sm text-gray-500">
-                                    Interval
-                                </dt>
-                                <dd className="mt-1 text-gray-900">
-                                    {monitor.interval_seconds}s
-                                </dd>
-                            </div>
-                            <div>
-                                <dt className="text-sm text-gray-500">
-                                    Keyword
-                                </dt>
-                                <dd className="mt-1 text-gray-900">
-                                    {monitor.config?.keyword || '—'}
-                                </dd>
-                            </div>
-                            <div>
-                                <dt className="text-sm text-gray-500">
-                                    Last checked
-                                </dt>
-                                <dd className="mt-1 text-gray-900">
-                                    {formatCheckedAt(monitor.last_checked_at)}
-                                </dd>
-                            </div>
-                            <div>
-                                <dt className="text-sm text-gray-500">
-                                    Last status change
-                                </dt>
-                                <dd className="mt-1 text-gray-900">
-                                    {formatCheckedAt(
-                                        monitor.last_status_change_at,
-                                    )}
-                                </dd>
-                            </div>
-                        </dl>
+
+                        {monitor.config?.kind === 'heartbeat' ? (
+                            <dl className="mt-4 grid gap-4 sm:grid-cols-2">
+                                <div className="sm:col-span-2">
+                                    <dt className="text-sm text-gray-500">
+                                        Type
+                                    </dt>
+                                    <dd className="mt-1 text-gray-900">
+                                        Heartbeat
+                                    </dd>
+                                </div>
+                                {monitor.config.ping_url && (
+                                    <div className="sm:col-span-2">
+                                        <dt className="text-sm text-gray-500">
+                                            Ping URL
+                                        </dt>
+                                        <dd className="mt-1 break-all rounded bg-gray-50 p-3 font-mono text-sm text-gray-900">
+                                            {monitor.config.ping_url}
+                                        </dd>
+                                        <p className="mt-2 text-xs text-gray-500">
+                                            Example:{' '}
+                                            <code className="rounded bg-gray-100 px-1">
+                                                curl -X POST{' '}
+                                                {monitor.config.ping_url}
+                                            </code>
+                                        </p>
+                                    </div>
+                                )}
+                                <div>
+                                    <dt className="text-sm text-gray-500">
+                                        Expected every
+                                    </dt>
+                                    <dd className="mt-1 text-gray-900">
+                                        {monitor.config.expected_every_seconds}s
+                                    </dd>
+                                </div>
+                                <div>
+                                    <dt className="text-sm text-gray-500">
+                                        Grace
+                                    </dt>
+                                    <dd className="mt-1 text-gray-900">
+                                        {monitor.config.grace_seconds}s
+                                    </dd>
+                                </div>
+                                <div>
+                                    <dt className="text-sm text-gray-500">
+                                        Last heartbeat
+                                    </dt>
+                                    <dd className="mt-1 text-gray-900">
+                                        {formatCheckedAt(
+                                            monitor.config.last_heartbeat_at,
+                                        )}
+                                    </dd>
+                                </div>
+                                <div>
+                                    <dt className="text-sm text-gray-500">
+                                        Last status change
+                                    </dt>
+                                    <dd className="mt-1 text-gray-900">
+                                        {formatCheckedAt(
+                                            monitor.last_status_change_at,
+                                        )}
+                                    </dd>
+                                </div>
+                            </dl>
+                        ) : (
+                            <dl className="mt-4 grid gap-4 sm:grid-cols-2">
+                                <div>
+                                    <dt className="text-sm text-gray-500">URL</dt>
+                                    <dd className="mt-1 break-all text-gray-900">
+                                        {monitor.config?.url}
+                                    </dd>
+                                </div>
+                                <div>
+                                    <dt className="text-sm text-gray-500">
+                                        Method
+                                    </dt>
+                                    <dd className="mt-1 text-gray-900">
+                                        {monitor.config?.method}
+                                    </dd>
+                                </div>
+                                <div>
+                                    <dt className="text-sm text-gray-500">
+                                        Expected status
+                                    </dt>
+                                    <dd className="mt-1 text-gray-900">
+                                        {monitor.config?.expected_status}
+                                    </dd>
+                                </div>
+                                <div>
+                                    <dt className="text-sm text-gray-500">
+                                        Timeout
+                                    </dt>
+                                    <dd className="mt-1 text-gray-900">
+                                        {monitor.config?.timeout_seconds}s
+                                    </dd>
+                                </div>
+                                <div>
+                                    <dt className="text-sm text-gray-500">
+                                        Interval
+                                    </dt>
+                                    <dd className="mt-1 text-gray-900">
+                                        {monitor.interval_seconds}s
+                                    </dd>
+                                </div>
+                                <div>
+                                    <dt className="text-sm text-gray-500">
+                                        Keyword
+                                    </dt>
+                                    <dd className="mt-1 text-gray-900">
+                                        {monitor.config?.keyword || '—'}
+                                    </dd>
+                                </div>
+                                <div>
+                                    <dt className="text-sm text-gray-500">
+                                        Last checked
+                                    </dt>
+                                    <dd className="mt-1 text-gray-900">
+                                        {formatCheckedAt(
+                                            monitor.last_checked_at,
+                                        )}
+                                    </dd>
+                                </div>
+                                <div>
+                                    <dt className="text-sm text-gray-500">
+                                        Last status change
+                                    </dt>
+                                    <dd className="mt-1 text-gray-900">
+                                        {formatCheckedAt(
+                                            monitor.last_status_change_at,
+                                        )}
+                                    </dd>
+                                </div>
+                            </dl>
+                        )}
                     </div>
 
                     <div className="overflow-hidden bg-white shadow-sm sm:rounded-lg">
@@ -202,8 +273,10 @@ export default function Show({
                         </div>
                         {checkResults.length === 0 ? (
                             <p className="p-6 text-sm text-gray-500">
-                                No checks yet. The scheduler will run this
-                                monitor shortly.
+                                No checks yet.
+                                {monitor.type === 'heartbeat'
+                                    ? ' Ping the URL to record the first heartbeat.'
+                                    : ' The scheduler will run this monitor shortly.'}
                             </p>
                         ) : (
                             <table className="min-w-full divide-y divide-gray-200">

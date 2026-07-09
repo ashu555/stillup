@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\HeartbeatController;
 use App\Http\Controllers\IncidentController;
 use App\Http\Controllers\MonitorController;
 use App\Http\Controllers\OrganizationController;
@@ -17,6 +18,10 @@ Route::get('/', function () {
         'phpVersion' => PHP_VERSION,
     ]);
 });
+
+Route::match(['get', 'post', 'head'], '/heartbeat/{token}', HeartbeatController::class)
+    ->where('token', '[A-Za-z0-9]+')
+    ->name('heartbeat.ping');
 
 Route::get('/dashboard', function () {
     return redirect()->route('organizations.index');
@@ -51,10 +56,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
             ->name('organizations.projects.monitors.create');
         Route::post('/organizations/{organization}/projects/{project}/monitors', [MonitorController::class, 'store'])
             ->name('organizations.projects.monitors.store');
+        Route::get('/organizations/{organization}/projects/{project}/monitors/create-heartbeat', [MonitorController::class, 'createHeartbeat'])
+            ->name('organizations.projects.monitors.create-heartbeat');
+        Route::post('/organizations/{organization}/projects/{project}/monitors/heartbeat', [MonitorController::class, 'storeHeartbeat'])
+            ->name('organizations.projects.monitors.store-heartbeat');
         Route::get('/organizations/{organization}/projects/{project}/monitors/{monitor}', [MonitorController::class, 'show'])
             ->name('organizations.projects.monitors.show');
         Route::patch('/organizations/{organization}/projects/{project}/monitors/{monitor}', [MonitorController::class, 'update'])
             ->name('organizations.projects.monitors.update');
+        Route::patch('/organizations/{organization}/projects/{project}/monitors/{monitor}/heartbeat', [MonitorController::class, 'updateHeartbeat'])
+            ->name('organizations.projects.monitors.update-heartbeat');
         Route::post('/organizations/{organization}/projects/{project}/monitors/{monitor}/pause', [MonitorController::class, 'pause'])
             ->name('organizations.projects.monitors.pause');
         Route::post('/organizations/{organization}/projects/{project}/monitors/{monitor}/resume', [MonitorController::class, 'resume'])

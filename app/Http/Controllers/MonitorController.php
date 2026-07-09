@@ -2,10 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\CreateHeartbeatMonitorAction;
 use App\Actions\CreateHttpMonitorAction;
 use App\Actions\PauseMonitorAction;
 use App\Actions\ResumeMonitorAction;
+use App\Actions\UpdateHeartbeatMonitorAction;
 use App\Actions\UpdateHttpMonitorAction;
+use App\Enums\MonitorType;
+use App\Http\Requests\Heartbeat\StoreHeartbeatMonitorRequest;
+use App\Http\Requests\Heartbeat\UpdateHeartbeatMonitorRequest;
 use App\Http\Requests\Monitor\StoreHttpMonitorRequest;
 use App\Http\Requests\Monitor\UpdateHttpMonitorRequest;
 use App\Models\Monitor;
@@ -24,7 +29,7 @@ class MonitorController extends Controller
         $this->authorize('viewAny', [Monitor::class, $project]);
 
         $monitors = $project->monitors()
-            ->with(['httpConfig', 'activeIncident'])
+            ->with(['httpConfig', 'heartbeatConfig', 'activeIncident'])
             ->orderBy('name')
             ->get()
             ->map(fn (Monitor $monitor) => $this->monitorSummary($monitor));
@@ -51,6 +56,18 @@ class MonitorController extends Controller
         ]);
     }
 
+    public function createHeartbeat(Organization $organization, Project $project): Response
+    {
+        abort_unless($project->organization_id === $organization->id, 404);
+
+        $this->authorize('create', [Monitor::class, $project]);
+
+        return Inertia::render('Monitors/CreateHeartbeat', [
+            'organization' => $this->organizationPayload($organization),
+            'project' => $this->projectPayload($project),
+        ]);
+    }
+
     public function store(
         StoreHttpMonitorRequest $request,
         Organization $organization,
@@ -66,6 +83,21 @@ class MonitorController extends Controller
             ->with('success', 'HTTP monitor created.');
     }
 
+    public function storeHeartbeat(
+        StoreHeartbeatMonitorRequest $request,
+        Organization $organization,
+        Project $project,
+        CreateHeartbeatMonitorAction $action
+    ): RedirectResponse {
+        abort_unless($project->organization_id === $organization->id, 404);
+
+        $monitor = $action->execute($request->user(), $project, $request->validated());
+
+        return redirect()
+            ->route('organizations.projects.monitors.show', [$organization, $project, $monitor])
+            ->with('success', 'Heartbeat monitor created. Copy the ping URL below.');
+    }
+
     public function show(
         Organization $organization,
         Project $project,
@@ -76,7 +108,7 @@ class MonitorController extends Controller
 
         $this->authorize('view', $monitor);
 
-        $monitor->load(['httpConfig', 'activeIncident']);
+        $monitor->load(['httpConfig', 'heartbeatConfig', 'activeIncident']);
 
         $checkResults = $monitor->checkResults()
             ->orderByDesc('checked_at')
@@ -92,19 +124,14 @@ class MonitorController extends Controller
             ]);
 
         $activeIncident = $monitor->activeIncident;
+        $canSeeToken = request()->user()->can('update', $monitor);
 
         return Inertia::render('Monitors/Show', [
             'organization' => $this->organizationPayload($organization),
             'project' => $this->projectPayload($project),
             'monitor' => [
-                ...$this->monitorSummary($monitor),
-                'config' => $monitor->httpConfig ? [
-                    'url' => $monitor->httpConfig->url,
-                    'method' => $monitor->httpConfig->method,
-                    'expected_status' => $monitor->httpConfig->expected_status,
-                    'timeout_seconds' => $monitor->httpConfig->timeout_seconds,
-                    'keyword' => $monitor->httpConfig->keyword,
-                ] : null,
+                ...$this->monitorSummary($monitor, $canSeeToken),
+                'config' => $this->configPayload($monitor, $canSeeToken),
                 'can' => [
                     'update' => request()->user()->can('update', $monitor),
                     'pause' => request()->user()->can('pause', $monitor),
@@ -131,12 +158,30 @@ class MonitorController extends Controller
     ): RedirectResponse {
         abort_unless($project->organization_id === $organization->id, 404);
         abort_unless($monitor->project_id === $project->id, 404);
+        abort_unless($monitor->type === MonitorType::Http, 404);
 
         $action->execute($request->user(), $monitor, $request->validated());
 
         return redirect()
             ->route('organizations.projects.monitors.show', [$organization, $project, $monitor])
             ->with('success', 'Monitor updated.');
+    }
+
+    public function updateHeartbeat(
+        UpdateHeartbeatMonitorRequest $request,
+        Organization $organization,
+        Project $project,
+        Monitor $monitor,
+        UpdateHeartbeatMonitorAction $action
+    ): RedirectResponse {
+        abort_unless($project->organization_id === $organization->id, 404);
+        abort_unless($monitor->project_id === $project->id, 404);
+
+        $action->execute($request->user(), $monitor, $request->validated());
+
+        return redirect()
+            ->route('organizations.projects.monitors.show', [$organization, $project, $monitor])
+            ->with('success', 'Heartbeat monitor updated.');
     }
 
     public function pause(
@@ -187,7 +232,7 @@ class MonitorController extends Controller
         ];
     }
 
-    private function monitorSummary(Monitor $monitor): array
+    private function monitorSummary(Monitor $monitor, bool $includeToken = false): array
     {
         return [
             'id' => $monitor->id,
@@ -198,7 +243,9 @@ class MonitorController extends Controller
             'interval_seconds' => $monitor->interval_seconds,
             'last_checked_at' => $monitor->last_checked_at?->toIso8601String(),
             'last_status_change_at' => $monitor->last_status_change_at?->toIso8601String(),
-            'url' => $monitor->httpConfig?->url,
+            'url' => $monitor->type === MonitorType::Http
+                ? $monitor->httpConfig?->url
+                : ($includeToken ? $monitor->heartbeatConfig?->pingUrl() : null),
             'active_incident' => $monitor->relationLoaded('activeIncident') && $monitor->activeIncident
                 ? [
                     'id' => $monitor->activeIncident->id,
@@ -206,5 +253,32 @@ class MonitorController extends Controller
                 ]
                 : null,
         ];
+    }
+
+    private function configPayload(Monitor $monitor, bool $canSeeToken): ?array
+    {
+        if ($monitor->type === MonitorType::Http && $monitor->httpConfig) {
+            return [
+                'kind' => 'http',
+                'url' => $monitor->httpConfig->url,
+                'method' => $monitor->httpConfig->method,
+                'expected_status' => $monitor->httpConfig->expected_status,
+                'timeout_seconds' => $monitor->httpConfig->timeout_seconds,
+                'keyword' => $monitor->httpConfig->keyword,
+            ];
+        }
+
+        if ($monitor->type === MonitorType::Heartbeat && $monitor->heartbeatConfig) {
+            return [
+                'kind' => 'heartbeat',
+                'expected_every_seconds' => $monitor->heartbeatConfig->expected_every_seconds,
+                'grace_seconds' => $monitor->heartbeatConfig->grace_seconds,
+                'last_heartbeat_at' => $monitor->heartbeatConfig->last_heartbeat_at?->toIso8601String(),
+                'token' => $canSeeToken ? $monitor->heartbeatConfig->token : null,
+                'ping_url' => $canSeeToken ? $monitor->heartbeatConfig->pingUrl() : null,
+            ];
+        }
+
+        return null;
     }
 }

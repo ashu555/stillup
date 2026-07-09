@@ -2,9 +2,11 @@
 
 namespace Database\Seeders;
 
+use App\Actions\CreateHeartbeatMonitorAction;
 use App\Actions\CreateHttpMonitorAction;
 use App\Actions\CreateOrganizationAction;
 use App\Actions\CreateProjectAction;
+use App\Enums\MonitorType;
 use App\Models\Monitor;
 use App\Models\Organization;
 use App\Models\Project;

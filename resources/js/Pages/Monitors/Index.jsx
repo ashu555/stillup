@@ -56,14 +56,25 @@ export default function Index({ organization, project, monitors, can }) {
                             Incidents
                         </Link>
                         {can.create && (
-                            <Link
-                                href={route(
-                                    'organizations.projects.monitors.create',
-                                    [organization.slug, project.slug],
-                                )}
-                            >
-                                <PrimaryButton>New HTTP monitor</PrimaryButton>
-                            </Link>
+                            <>
+                                <Link
+                                    href={route(
+                                        'organizations.projects.monitors.create',
+                                        [organization.slug, project.slug],
+                                    )}
+                                >
+                                    <PrimaryButton>New HTTP</PrimaryButton>
+                                </Link>
+                                <Link
+                                    href={route(
+                                        'organizations.projects.monitors.create-heartbeat',
+                                        [organization.slug, project.slug],
+                                    )}
+                                    className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 shadow-sm hover:bg-gray-50"
+                                >
+                                    New heartbeat
+                                </Link>
+                            </>
                         )}
                     </div>
                 </div>
@@ -113,7 +124,10 @@ export default function Index({ organization, project, monitors, can }) {
                                             Name
                                         </th>
                                         <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                                            URL
+                                            Type
+                                        </th>
+                                        <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                                            Target
                                         </th>
                                         <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                                             Status
@@ -150,8 +164,13 @@ export default function Index({ organization, project, monitors, can }) {
                                                     {monitor.name}
                                                 </Link>
                                             </td>
+                                            <td className="px-4 py-3 text-sm uppercase tracking-wide text-gray-500">
+                                                {monitor.type}
+                                            </td>
                                             <td className="max-w-xs truncate px-4 py-3 text-sm text-gray-600">
-                                                {monitor.url}
+                                                {monitor.type === 'http'
+                                                    ? monitor.url
+                                                    : `every ${formatInterval(monitor.interval_seconds)}`}
                                             </td>
                                             <td className="px-4 py-3">
                                                 <StatusBadge

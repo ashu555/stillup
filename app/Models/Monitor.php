@@ -49,6 +49,11 @@ class Monitor extends Model
         return $this->hasOne(HttpMonitorConfig::class);
     }
 
+    public function heartbeatConfig(): HasOne
+    {
+        return $this->hasOne(HeartbeatMonitorConfig::class);
+    }
+
     public function checkResults(): HasMany
     {
         return $this->hasMany(CheckResult::class);
@@ -88,6 +93,11 @@ class Monitor extends Model
     public function scopeHttp($query)
     {
         return $query->where('type', MonitorType::Http);
+    }
+
+    public function scopeHeartbeat($query)
+    {
+        return $query->where('type', MonitorType::Heartbeat);
     }
 
     public function scopeEnabled($query)
