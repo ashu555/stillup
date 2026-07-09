@@ -1,6 +1,6 @@
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
-import StatusBadge from '@/Components/StatusBadge';
+import { StatusBadge } from '@/Components/StatusBadge';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router } from '@inertiajs/react';
 
@@ -43,7 +43,7 @@ export default function Show({ organization, project, incident, events }) {
                         </p>
                     </div>
                     <div className="flex items-center gap-2">
-                        <StatusBadge status={incident.status} />
+                        <StatusBadge status={incident.status} kind="incident" />
                         {incident.can.acknowledge && (
                             <PrimaryButton onClick={acknowledge}>
                                 Acknowledge
