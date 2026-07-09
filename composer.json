@@ -1,9 +1,9 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
-    "name": "laravel/laravel",
+    "name": "stillup/stillup",
     "type": "project",
-    "description": "The skeleton application for the Laravel framework.",
-    "keywords": ["laravel", "framework"],
+    "description": "Stillup — uptime and cron heartbeat monitoring with incidents and public status pages.",
+    "keywords": ["uptime", "monitoring", "heartbeat", "laravel", "stillup"],
     "license": "MIT",
     "require": {
         "php": "^8.2",

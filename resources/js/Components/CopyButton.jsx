@@ -3,12 +3,38 @@ import { useState } from 'react';
 export default function CopyButton({ value, label = 'Copy' }) {
     const [copied, setCopied] = useState(false);
 
+    const copyWithFallback = (text) => {
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        textarea.setAttribute('readonly', '');
+        textarea.style.position = 'fixed';
+        textarea.style.left = '-9999px';
+        document.body.appendChild(textarea);
+        textarea.select();
+        const ok = document.execCommand('copy');
+        document.body.removeChild(textarea);
+        return ok;
+    };
+
     const copy = async () => {
         try {
-            await navigator.clipboard.writeText(value);
+            if (navigator.clipboard?.writeText) {
+                await navigator.clipboard.writeText(value);
+            } else if (!copyWithFallback(value)) {
+                throw new Error('Copy failed');
+            }
             setCopied(true);
             setTimeout(() => setCopied(false), 1500);
         } catch {
+            try {
+                if (copyWithFallback(value)) {
+                    setCopied(true);
+                    setTimeout(() => setCopied(false), 1500);
+                    return;
+                }
+            } catch {
+                // ignore
+            }
             setCopied(false);
         }
     };

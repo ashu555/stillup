@@ -209,6 +209,27 @@ class HeartbeatMonitorTest extends TestCase
             ->assertForbidden();
     }
 
+    public function test_paused_heartbeat_is_skipped_by_miss_detector(): void
+    {
+        Notification::fake();
+
+        [, , $project] = $this->createMembership(OrganizationRole::Owner);
+        $monitor = $this->createHeartbeatMonitor($project, [
+            'status' => MonitorStatus::Paused,
+            'is_enabled' => false,
+        ], [
+            'last_heartbeat_at' => now()->subHour(),
+            'expected_every_seconds' => 60,
+            'grace_seconds' => 0,
+        ]);
+
+        (new DetectMissedHeartbeatsJob)->handle(app(MarkHeartbeatMissedAction::class));
+
+        $this->assertSame(MonitorStatus::Paused, $monitor->fresh()->status);
+        $this->assertDatabaseCount('incidents', 0);
+        Notification::assertNothingSent();
+    }
+
     /**
      * @return array{0: User, 1: Organization, 2: Project}
      */

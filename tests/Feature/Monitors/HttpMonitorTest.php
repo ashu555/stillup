@@ -171,6 +171,27 @@ class HttpMonitorTest extends TestCase
         });
     }
 
+    public function test_paused_http_monitor_is_skipped_by_dispatch_job(): void
+    {
+        Queue::fake();
+
+        [, , $project] = $this->createMembership(OrganizationRole::Owner);
+
+        $paused = $this->createHttpMonitor($project, 'https://paused.example.com', [
+            'last_checked_at' => null,
+            'status' => MonitorStatus::Paused,
+            'is_enabled' => false,
+            'interval_seconds' => 60,
+        ]);
+
+        (new DispatchDueHttpMonitorsJob)->handle();
+
+        Queue::assertNothingPushed();
+        Queue::assertNotPushed(RunHttpMonitorCheckJob::class, function (RunHttpMonitorCheckJob $job) use ($paused) {
+            return $job->monitorId === $paused->id;
+        });
+    }
+
     /**
      * @return array{0: User, 1: Organization, 2: Project}
      */

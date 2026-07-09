@@ -152,4 +152,46 @@ class PublicStatusPageTest extends TestCase
 
         $this->assertTrue($project->fresh()->public_status_enabled);
     }
+
+    public function test_disabled_and_soft_deleted_monitors_are_hidden_from_public_status(): void
+    {
+        $project = Project::factory()->create([
+            'slug' => 'production',
+            'public_status_enabled' => true,
+        ]);
+
+        $visible = Monitor::factory()->create([
+            'project_id' => $project->id,
+            'name' => 'Visible API',
+            'status' => MonitorStatus::Up,
+            'is_enabled' => true,
+        ]);
+
+        $disabled = Monitor::factory()->create([
+            'project_id' => $project->id,
+            'name' => 'Disabled API',
+            'status' => MonitorStatus::Up,
+            'is_enabled' => false,
+        ]);
+
+        $deleted = Monitor::factory()->create([
+            'project_id' => $project->id,
+            'name' => 'Deleted API',
+            'status' => MonitorStatus::Up,
+            'is_enabled' => true,
+        ]);
+        $deleted->delete();
+
+        $json = $this->getJson(route('status.json', $project->slug))
+            ->assertOk()
+            ->assertJsonPath('monitors.0.name', 'Visible API')
+            ->json('monitors');
+
+        $names = collect($json)->pluck('name')->all();
+        $this->assertSame(['Visible API'], $names);
+        $this->assertNotContains('Disabled API', $names);
+        $this->assertNotContains('Deleted API', $names);
+        $this->assertTrue($visible->exists);
+        $this->assertFalse($disabled->is_enabled);
+    }
 }

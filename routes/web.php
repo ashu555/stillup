@@ -22,6 +22,7 @@ Route::get('/', function () {
 });
 
 Route::match(['get', 'post', 'head'], '/heartbeat/{token}', HeartbeatController::class)
+    ->middleware('throttle:heartbeat')
     ->where('token', '[A-Za-z0-9]+')
     ->name('heartbeat.ping');
 

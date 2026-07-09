@@ -9,7 +9,9 @@ services:
     volumes:
       - .:/var/www/html
     environment:
-      APP_ENV: local
+      # Prefer .env for APP_ENV so `php artisan test` / phpunit.xml can use testing.
+      # Do not hard-pin APP_ENV here — it leaks into PHPUnit and breaks CSRF handling.
+      APP_KEY: ${APP_KEY:-}
     networks:
       - stillup
     depends_on:

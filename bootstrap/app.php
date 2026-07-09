@@ -17,6 +17,11 @@ return Application::configure(basePath: dirname(__DIR__))
             \Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets::class,
         ]);
 
+        // Public heartbeat pings come from cron/curl without a session CSRF token.
+        $middleware->validateCsrfTokens(except: [
+            'heartbeat/*',
+        ]);
+
         $middleware->statefulApi();
     })
     ->withExceptions(function (Exceptions $exceptions) {
