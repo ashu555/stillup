@@ -1,10 +1,13 @@
 # Stillup
 
-Uptime + cron heartbeat monitoring platform. Step 1: foundation (auth, organizations, projects, Docker).
+Uptime + cron heartbeat monitoring platform.
+
+**Step 1:** foundation (auth, organizations, projects, Docker)  
+**Step 2:** HTTP monitors + scheduled checks
 
 ## Stack
 
-- Laravel 11 / PHP 8.4
+- Laravel 11 / PHP 8.3
 - MySQL 8
 - Redis (queues + cache)
 - Laravel Sanctum
@@ -29,9 +32,27 @@ Mailhog UI: http://localhost:8025
 - Email: `demo@stillup.test`
 - Password: `password`
 
+Demo project includes two HTTP monitors (example.com + an intentionally broken URL).
+
+## Verify HTTP monitors
+
+```bash
+# Migrate + seed
+docker compose exec app php artisan migrate --seed
+
+# Feature tests
+php artisan test --filter=HttpMonitorTest
+
+# Manually run scheduler tick (also runs every minute in the scheduler container)
+docker compose exec app php artisan schedule:run
+
+# UI path
+# Login → Organizations → Acme → Production → Monitors
+```
+
 ## Local (without Docker)
 
-Requires PHP 8.4, Composer, MySQL, Redis, Node 18+.
+Requires PHP 8.3, Composer, MySQL, Redis, Node 18+.
 
 ```bash
 cp .env.example .env
@@ -81,24 +102,25 @@ curl http://localhost:8080/api/auth/me \
 
 `owner` · `admin` · `member` · `viewer`
 
-Organization creators become `owner`. Policies gate org/project access accordingly.
+- viewer: read-only monitors
+- member+: create/update/pause/resume
+- admin/owner: delete (policy ready; UI delete not in Step 2)
 
-## Project layout (Step 1)
+## Project layout
 
 ```
 app/
-  Actions/          CreateOrganizationAction, CreateProjectAction
-  Enums/            OrganizationRole
-  Models/           User, Organization, Project, AuditLog
-  Policies/         OrganizationPolicy, ProjectPolicy
-  Services/         AuditLogger
-docker/
-  nginx/            reverse proxy
-  php/              PHP-FPM image + entrypoint
+  Actions/          CreateHttpMonitorAction, RecordCheckResultAction, …
+  DTOs/             HttpCheckResultDto
+  Enums/            MonitorType, MonitorStatus, OrganizationRole
+  Jobs/             DispatchDueHttpMonitorsJob, RunHttpMonitorCheckJob
+  Models/           Monitor, HttpMonitorConfig, CheckResult, …
+  Policies/         MonitorPolicy, …
+  Services/         HttpMonitorChecker, AuditLogger
 ```
 
-## Step 1 scope
+## Scope
 
-Done: Docker stack, Sanctum session + token auth, orgs/projects CRUD foundation, roles/policies, audit logs, Inertia shell.
+**Done (Step 1–2):** Docker, auth, orgs/projects, HTTP monitors, check jobs, scheduler, check history UI.
 
-Not yet: HTTP monitors, heartbeats, incidents, alerts, public status pages.
+**Not yet:** Heartbeats, incidents, email alerts, public status pages.

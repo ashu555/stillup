@@ -2,8 +2,10 @@
 
 namespace App\Providers;
 
+use App\Models\Monitor;
 use App\Models\Organization;
 use App\Models\Project;
+use App\Policies\MonitorPolicy;
 use App\Policies\OrganizationPolicy;
 use App\Policies\ProjectPolicy;
 use Illuminate\Support\Facades\Gate;
@@ -23,5 +25,6 @@ class AppServiceProvider extends ServiceProvider
 
         Gate::policy(Organization::class, OrganizationPolicy::class);
         Gate::policy(Project::class, ProjectPolicy::class);
+        Gate::policy(Monitor::class, MonitorPolicy::class);
     }
 }

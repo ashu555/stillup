@@ -2,8 +2,10 @@
 
 namespace Database\Seeders;
 
+use App\Actions\CreateHttpMonitorAction;
 use App\Actions\CreateOrganizationAction;
 use App\Actions\CreateProjectAction;
+use App\Models\Monitor;
 use App\Models\Organization;
 use App\Models\Project;
 use App\Models\User;
@@ -39,10 +41,51 @@ class DatabaseSeeder extends Seeder
             ->first();
 
         if (! $project) {
-            app(CreateProjectAction::class)->execute($user, $organization, [
+            $project = app(CreateProjectAction::class)->execute($user, $organization, [
                 'name' => 'Production',
                 'slug' => 'production',
                 'public_status_enabled' => true,
+            ]);
+        }
+
+        $this->seedDemoMonitors($user, $project);
+    }
+
+    private function seedDemoMonitors(User $user, Project $project): void
+    {
+        $action = app(CreateHttpMonitorAction::class);
+
+        $hasExample = Monitor::query()
+            ->where('project_id', $project->id)
+            ->whereHas('httpConfig', fn ($q) => $q->where('url', 'https://example.com'))
+            ->exists();
+
+        if (! $hasExample) {
+            $action->execute($user, $project, [
+                'name' => 'Example.com',
+                'url' => 'https://example.com',
+                'method' => 'GET',
+                'expected_status' => 200,
+                'timeout_seconds' => 10,
+                'interval_seconds' => 60,
+                'keyword' => null,
+            ]);
+        }
+
+        $hasBad = Monitor::query()
+            ->where('project_id', $project->id)
+            ->whereHas('httpConfig', fn ($q) => $q->where('url', 'https://stillup-invalid.example.invalid'))
+            ->exists();
+
+        if (! $hasBad) {
+            $action->execute($user, $project, [
+                'name' => 'Broken endpoint (demo)',
+                'url' => 'https://stillup-invalid.example.invalid',
+                'method' => 'GET',
+                'expected_status' => 200,
+                'timeout_seconds' => 5,
+                'interval_seconds' => 60,
+                'keyword' => null,
             ]);
         }
     }

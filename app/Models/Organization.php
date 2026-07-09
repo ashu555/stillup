@@ -10,6 +10,7 @@ use Illuminate\Support\Str;
 
 class Organization extends Model
 {
+    /** @use HasFactory<\Database\Factories\OrganizationFactory> */
     use HasFactory;
 
     protected $fillable = [

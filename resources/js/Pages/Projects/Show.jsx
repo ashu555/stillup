@@ -1,17 +1,28 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import PrimaryButton from '@/Components/PrimaryButton';
 import { Head, Link } from '@inertiajs/react';
 
 export default function Show({ organization, project }) {
     return (
         <AuthenticatedLayout
             header={
-                <div>
-                    <h2 className="text-xl font-semibold leading-tight text-gray-800">
-                        {project.name}
-                    </h2>
-                    <p className="mt-1 text-sm text-gray-500">
-                        {organization.name}
-                    </p>
+                <div className="flex items-center justify-between">
+                    <div>
+                        <h2 className="text-xl font-semibold leading-tight text-gray-800">
+                            {project.name}
+                        </h2>
+                        <p className="mt-1 text-sm text-gray-500">
+                            {organization.name}
+                        </p>
+                    </div>
+                    <Link
+                        href={route('organizations.projects.monitors.index', [
+                            organization.slug,
+                            project.slug,
+                        ])}
+                    >
+                        <PrimaryButton>Monitors</PrimaryButton>
+                    </Link>
                 </div>
             }
         >
@@ -48,9 +59,17 @@ export default function Show({ organization, project }) {
                             </div>
                         </dl>
 
-                        <p className="mt-6 text-sm text-gray-500">
-                            Monitors and incidents will land here in Step 2.
-                        </p>
+                        <div className="mt-6">
+                            <Link
+                                href={route(
+                                    'organizations.projects.monitors.index',
+                                    [organization.slug, project.slug],
+                                )}
+                                className="text-sm font-medium text-indigo-600 hover:text-indigo-800"
+                            >
+                                View HTTP monitors →
+                            </Link>
+                        </div>
                     </div>
                 </div>
             </div>

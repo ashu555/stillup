@@ -5,11 +5,13 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Support\Str;
 
 class Project extends Model
 {
+    /** @use HasFactory<\Database\Factories\ProjectFactory> */
     use HasFactory;
 
     protected $fillable = [
@@ -62,9 +64,25 @@ class Project extends Model
         return $this->belongsTo(Organization::class);
     }
 
+    public function monitors(): HasMany
+    {
+        return $this->hasMany(Monitor::class);
+    }
+
     public function auditLogs(): MorphMany
     {
         return $this->morphMany(AuditLog::class, 'auditable');
+    }
+
+    public function resolveChildRouteBinding($childType, $value, $field)
+    {
+        if ($childType === 'monitor') {
+            return $this->monitors()
+                ->where($field ?? 'id', $value)
+                ->firstOrFail();
+        }
+
+        return parent::resolveChildRouteBinding($childType, $value, $field);
     }
 
     public function getRouteKeyName(): string

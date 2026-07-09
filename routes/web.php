@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\MonitorController;
 use App\Http\Controllers\OrganizationController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProjectController;
@@ -42,6 +43,21 @@ Route::middleware(['auth', 'verified'])->group(function () {
             ->name('organizations.projects.show');
         Route::put('/organizations/{organization}/projects/{project}', [ProjectController::class, 'update'])
             ->name('organizations.projects.update');
+
+        Route::get('/organizations/{organization}/projects/{project}/monitors', [MonitorController::class, 'index'])
+            ->name('organizations.projects.monitors.index');
+        Route::get('/organizations/{organization}/projects/{project}/monitors/create', [MonitorController::class, 'create'])
+            ->name('organizations.projects.monitors.create');
+        Route::post('/organizations/{organization}/projects/{project}/monitors', [MonitorController::class, 'store'])
+            ->name('organizations.projects.monitors.store');
+        Route::get('/organizations/{organization}/projects/{project}/monitors/{monitor}', [MonitorController::class, 'show'])
+            ->name('organizations.projects.monitors.show');
+        Route::patch('/organizations/{organization}/projects/{project}/monitors/{monitor}', [MonitorController::class, 'update'])
+            ->name('organizations.projects.monitors.update');
+        Route::post('/organizations/{organization}/projects/{project}/monitors/{monitor}/pause', [MonitorController::class, 'pause'])
+            ->name('organizations.projects.monitors.pause');
+        Route::post('/organizations/{organization}/projects/{project}/monitors/{monitor}/resume', [MonitorController::class, 'resume'])
+            ->name('organizations.projects.monitors.resume');
     });
 });
 
