@@ -69,6 +69,11 @@ class Project extends Model
         return $this->hasMany(Monitor::class);
     }
 
+    public function incidents(): HasMany
+    {
+        return $this->hasMany(Incident::class);
+    }
+
     public function auditLogs(): MorphMany
     {
         return $this->morphMany(AuditLog::class, 'auditable');
@@ -78,6 +83,12 @@ class Project extends Model
     {
         if ($childType === 'monitor') {
             return $this->monitors()
+                ->where($field ?? 'id', $value)
+                ->firstOrFail();
+        }
+
+        if ($childType === 'incident') {
+            return $this->incidents()
                 ->where($field ?? 'id', $value)
                 ->firstOrFail();
         }

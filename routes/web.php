@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\IncidentController;
 use App\Http\Controllers\MonitorController;
 use App\Http\Controllers\OrganizationController;
 use App\Http\Controllers\ProfileController;
@@ -58,6 +59,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
             ->name('organizations.projects.monitors.pause');
         Route::post('/organizations/{organization}/projects/{project}/monitors/{monitor}/resume', [MonitorController::class, 'resume'])
             ->name('organizations.projects.monitors.resume');
+
+        Route::get('/organizations/{organization}/projects/{project}/incidents', [IncidentController::class, 'index'])
+            ->name('organizations.projects.incidents.index');
+        Route::get('/organizations/{organization}/projects/{project}/incidents/{incident}', [IncidentController::class, 'show'])
+            ->name('organizations.projects.incidents.show');
+        Route::post('/organizations/{organization}/projects/{project}/incidents/{incident}/acknowledge', [IncidentController::class, 'acknowledge'])
+            ->name('organizations.projects.incidents.acknowledge');
+        Route::post('/organizations/{organization}/projects/{project}/incidents/{incident}/resolve', [IncidentController::class, 'resolve'])
+            ->name('organizations.projects.incidents.resolve');
     });
 });
 

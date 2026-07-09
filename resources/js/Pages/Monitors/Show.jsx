@@ -26,7 +26,13 @@ function formatCheckedAt(value) {
     return new Date(value).toLocaleString();
 }
 
-export default function Show({ organization, project, monitor, checkResults }) {
+export default function Show({
+    organization,
+    project,
+    monitor,
+    activeIncident,
+    checkResults,
+}) {
     const pause = () => {
         router.post(
             route('organizations.projects.monitors.pause', [
@@ -89,6 +95,34 @@ export default function Show({ organization, project, monitor, checkResults }) {
                     >
                         ← Back to monitors
                     </Link>
+
+                    {activeIncident && (
+                        <div className="border border-red-200 bg-red-50 p-4 shadow-sm sm:rounded-lg">
+                            <div className="flex flex-wrap items-center justify-between gap-3">
+                                <div>
+                                    <p className="text-sm font-semibold uppercase tracking-wide text-red-700">
+                                        Active incident · {activeIncident.status}
+                                    </p>
+                                    <p className="mt-1 text-sm text-red-900">
+                                        {activeIncident.summary}
+                                    </p>
+                                </div>
+                                <Link
+                                    href={route(
+                                        'organizations.projects.incidents.show',
+                                        [
+                                            organization.slug,
+                                            project.slug,
+                                            activeIncident.id,
+                                        ],
+                                    )}
+                                    className="text-sm font-medium text-red-700 underline hover:text-red-900"
+                                >
+                                    View incident →
+                                </Link>
+                            </div>
+                        </div>
+                    )}
 
                     <div className="bg-white p-6 shadow-sm sm:rounded-lg">
                         <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-500">

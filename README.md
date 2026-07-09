@@ -3,7 +3,8 @@
 Uptime + cron heartbeat monitoring platform.
 
 **Step 1:** foundation (auth, organizations, projects, Docker)  
-**Step 2:** HTTP monitors + scheduled checks
+**Step 2:** HTTP monitors + scheduled checks  
+**Step 3:** Incidents + email alerts
 
 ## Stack
 
@@ -12,7 +13,7 @@ Uptime + cron heartbeat monitoring platform.
 - Redis (queues + cache)
 - Laravel Sanctum
 - Inertia.js + React + Tailwind CSS
-- Docker Compose
+- Docker Compose + Mailhog
 
 ## Quick start (Docker)
 
@@ -32,95 +33,44 @@ Mailhog UI: http://localhost:8025
 - Email: `demo@stillup.test`
 - Password: `password`
 
-Demo project includes two HTTP monitors (example.com + an intentionally broken URL).
-
-## Verify HTTP monitors
+## Verify incidents + email (Step 3)
 
 ```bash
-# Migrate + seed
-docker compose exec app php artisan migrate --seed
+docker compose exec app php artisan migrate
+php artisan test --filter='IncidentTest|HttpMonitorTest'
 
-# Feature tests
-php artisan test --filter=HttpMonitorTest
-
-# Manually run scheduler tick (also runs every minute in the scheduler container)
+# Force checks (scheduler also runs every minute)
 docker compose exec app php artisan schedule:run
 
-# UI path
-# Login → Organizations → Acme → Production → Monitors
+# Or run a single due check cycle via queue
+docker compose exec app php artisan queue:work redis --once
 ```
 
-## Local (without Docker)
+**Demo path**
 
-Requires PHP 8.3, Composer, MySQL, Redis, Node 18+.
-
-```bash
-cp .env.example .env
-# Point DB_HOST / REDIS_HOST / MAIL_HOST to localhost
-composer install
-php artisan key:generate
-php artisan migrate --seed
-npm install && npm run build
-php artisan serve
-```
+1. Login → Organizations → Acme → Production → Monitors  
+2. Open **Broken endpoint (demo)** (or create a monitor with a bad URL)  
+3. Wait for scheduler/queue → monitor goes **DOWN** → incident opens  
+4. Check Mailhog for “Incident opened” email  
+5. Acknowledge from Incidents UI  
+6. Point monitor at a healthy URL / wait for recovery → auto-resolve + recovery email  
 
 ## Useful commands
 
 ```bash
-# App shell
 docker compose exec app bash
-
-# Queue / scheduler are already running as containers
 docker compose ps
-
-# Rebuild assets while developing (on the host)
 npm run dev
 ```
 
-## API auth (Sanctum tokens)
+## Roles (incidents)
 
-```bash
-# Register
-curl -X POST http://localhost:8080/api/auth/register \
-  -H "Content-Type: application/json" \
-  -H "Accept: application/json" \
-  -d '{"name":"Ada","email":"ada@example.com","password":"password","password_confirmation":"password"}'
-
-# Login
-curl -X POST http://localhost:8080/api/auth/login \
-  -H "Content-Type: application/json" \
-  -H "Accept: application/json" \
-  -d '{"email":"demo@stillup.test","password":"password"}'
-
-# Me
-curl http://localhost:8080/api/auth/me \
-  -H "Authorization: Bearer YOUR_TOKEN" \
-  -H "Accept: application/json"
-```
-
-## Roles
-
-`owner` · `admin` · `member` · `viewer`
-
-- viewer: read-only monitors
-- member+: create/update/pause/resume
-- admin/owner: delete (policy ready; UI delete not in Step 2)
-
-## Project layout
-
-```
-app/
-  Actions/          CreateHttpMonitorAction, RecordCheckResultAction, …
-  DTOs/             HttpCheckResultDto
-  Enums/            MonitorType, MonitorStatus, OrganizationRole
-  Jobs/             DispatchDueHttpMonitorsJob, RunHttpMonitorCheckJob
-  Models/           Monitor, HttpMonitorConfig, CheckResult, …
-  Policies/         MonitorPolicy, …
-  Services/         HttpMonitorChecker, AuditLogger
-```
+- viewer: view only  
+- member+: acknowledge + manual resolve  
+- admin/owner: receive opened/resolved emails  
 
 ## Scope
 
-**Done (Step 1–2):** Docker, auth, orgs/projects, HTTP monitors, check jobs, scheduler, check history UI.
+**Done:** Docker, auth, orgs/projects, HTTP monitors, incidents, email alerts (Mailhog).
 
-**Not yet:** Heartbeats, incidents, email alerts, public status pages.
+**Not yet:** Heartbeats, public status pages, Slack/SMS, escalation.

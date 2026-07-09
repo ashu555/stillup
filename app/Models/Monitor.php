@@ -54,6 +54,22 @@ class Monitor extends Model
         return $this->hasMany(CheckResult::class);
     }
 
+    public function incidents(): HasMany
+    {
+        return $this->hasMany(Incident::class);
+    }
+
+    public function activeIncident(): HasOne
+    {
+        return $this->hasOne(Incident::class)->ofMany(
+            ['id' => 'max'],
+            fn ($query) => $query->whereIn('status', [
+                \App\Enums\IncidentStatus::Open->value,
+                \App\Enums\IncidentStatus::Acknowledged->value,
+            ])
+        );
+    }
+
     public function isDue(): bool
     {
         if (! $this->is_enabled || $this->status === MonitorStatus::Paused) {

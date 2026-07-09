@@ -45,16 +45,27 @@ export default function Index({ organization, project, monitors, can }) {
                             {organization.name} / {project.name}
                         </p>
                     </div>
-                    {can.create && (
+                    <div className="flex items-center gap-3">
                         <Link
                             href={route(
-                                'organizations.projects.monitors.create',
+                                'organizations.projects.incidents.index',
                                 [organization.slug, project.slug],
                             )}
+                            className="text-sm text-indigo-600 hover:text-indigo-800"
                         >
-                            <PrimaryButton>New HTTP monitor</PrimaryButton>
+                            Incidents
                         </Link>
-                    )}
+                        {can.create && (
+                            <Link
+                                href={route(
+                                    'organizations.projects.monitors.create',
+                                    [organization.slug, project.slug],
+                                )}
+                            >
+                                <PrimaryButton>New HTTP monitor</PrimaryButton>
+                            </Link>
+                        )}
+                    </div>
                 </div>
             }
         >
@@ -108,6 +119,9 @@ export default function Index({ organization, project, monitors, can }) {
                                             Status
                                         </th>
                                         <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                                            Incident
+                                        </th>
+                                        <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                                             Interval
                                         </th>
                                         <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
@@ -143,6 +157,33 @@ export default function Index({ organization, project, monitors, can }) {
                                                 <StatusBadge
                                                     status={monitor.status}
                                                 />
+                                            </td>
+                                            <td className="px-4 py-3 text-sm">
+                                                {monitor.active_incident ? (
+                                                    <Link
+                                                        href={route(
+                                                            'organizations.projects.incidents.show',
+                                                            [
+                                                                organization.slug,
+                                                                project.slug,
+                                                                monitor
+                                                                    .active_incident
+                                                                    .id,
+                                                            ],
+                                                        )}
+                                                        className="font-medium text-red-600 hover:text-red-800"
+                                                    >
+                                                        {
+                                                            monitor
+                                                                .active_incident
+                                                                .status
+                                                        }
+                                                    </Link>
+                                                ) : (
+                                                    <span className="text-gray-400">
+                                                        —
+                                                    </span>
+                                                )}
                                             </td>
                                             <td className="px-4 py-3 text-sm text-gray-600">
                                                 {formatInterval(

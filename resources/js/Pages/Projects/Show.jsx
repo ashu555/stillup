@@ -15,14 +15,25 @@ export default function Show({ organization, project }) {
                             {organization.name}
                         </p>
                     </div>
-                    <Link
-                        href={route('organizations.projects.monitors.index', [
-                            organization.slug,
-                            project.slug,
-                        ])}
-                    >
-                        <PrimaryButton>Monitors</PrimaryButton>
-                    </Link>
+                    <div className="flex items-center gap-2">
+                        <Link
+                            href={route(
+                                'organizations.projects.incidents.index',
+                                [organization.slug, project.slug],
+                            )}
+                            className="text-sm text-indigo-600 hover:text-indigo-800"
+                        >
+                            Incidents
+                        </Link>
+                        <Link
+                            href={route(
+                                'organizations.projects.monitors.index',
+                                [organization.slug, project.slug],
+                            )}
+                        >
+                            <PrimaryButton>Monitors</PrimaryButton>
+                        </Link>
+                    </div>
                 </div>
             }
         >
@@ -59,7 +70,7 @@ export default function Show({ organization, project }) {
                             </div>
                         </dl>
 
-                        <div className="mt-6">
+                        <div className="mt-6 flex flex-wrap gap-4">
                             <Link
                                 href={route(
                                     'organizations.projects.monitors.index',
@@ -68,6 +79,15 @@ export default function Show({ organization, project }) {
                                 className="text-sm font-medium text-indigo-600 hover:text-indigo-800"
                             >
                                 View HTTP monitors →
+                            </Link>
+                            <Link
+                                href={route(
+                                    'organizations.projects.incidents.index',
+                                    [organization.slug, project.slug],
+                                )}
+                                className="text-sm font-medium text-indigo-600 hover:text-indigo-800"
+                            >
+                                View incidents →
                             </Link>
                         </div>
                     </div>

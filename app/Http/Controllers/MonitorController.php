@@ -24,7 +24,7 @@ class MonitorController extends Controller
         $this->authorize('viewAny', [Monitor::class, $project]);
 
         $monitors = $project->monitors()
-            ->with('httpConfig')
+            ->with(['httpConfig', 'activeIncident'])
             ->orderBy('name')
             ->get()
             ->map(fn (Monitor $monitor) => $this->monitorSummary($monitor));
@@ -76,7 +76,7 @@ class MonitorController extends Controller
 
         $this->authorize('view', $monitor);
 
-        $monitor->load('httpConfig');
+        $monitor->load(['httpConfig', 'activeIncident']);
 
         $checkResults = $monitor->checkResults()
             ->orderByDesc('checked_at')
@@ -90,6 +90,8 @@ class MonitorController extends Controller
                 'error_message' => $result->error_message,
                 'checked_at' => $result->checked_at?->toIso8601String(),
             ]);
+
+        $activeIncident = $monitor->activeIncident;
 
         return Inertia::render('Monitors/Show', [
             'organization' => $this->organizationPayload($organization),
@@ -110,6 +112,12 @@ class MonitorController extends Controller
                     'delete' => request()->user()->can('delete', $monitor),
                 ],
             ],
+            'activeIncident' => $activeIncident ? [
+                'id' => $activeIncident->id,
+                'status' => $activeIncident->status->value,
+                'summary' => $activeIncident->summary,
+                'opened_at' => $activeIncident->opened_at?->toIso8601String(),
+            ] : null,
             'checkResults' => $checkResults,
         ]);
     }
@@ -191,6 +199,12 @@ class MonitorController extends Controller
             'last_checked_at' => $monitor->last_checked_at?->toIso8601String(),
             'last_status_change_at' => $monitor->last_status_change_at?->toIso8601String(),
             'url' => $monitor->httpConfig?->url,
+            'active_incident' => $monitor->relationLoaded('activeIncident') && $monitor->activeIncident
+                ? [
+                    'id' => $monitor->activeIncident->id,
+                    'status' => $monitor->activeIncident->status->value,
+                ]
+                : null,
         ];
     }
 }
