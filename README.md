@@ -16,6 +16,35 @@ Stillup is an uptime and cron heartbeat monitoring app: schedule HTTP checks, re
 
 Laravel 11 · PHP 8.3 · MySQL 8 · Redis · Sanctum · Inertia React + Tailwind · Docker Compose · Mailhog
 
+## Screenshots
+
+### Dashboard
+![Ops dashboard](docs/screenshots/dashboard.png)
+
+![Dashboard needs attention](docs/screenshots/dashboard2.png)
+
+### Organizations
+![Organization list](docs/screenshots/organization-list.png)
+
+### Monitors
+![Monitors list](docs/screenshots/monitors.png)
+
+![Create HTTP monitor](docs/screenshots/create-http-monitor.png)
+
+![HTTP monitor detail](docs/screenshots/http-monitor-created.png)
+
+![Create heartbeat monitor](docs/screenshots/create-heartbeat-monitor.png)
+
+![Heartbeat monitor detail](docs/screenshots/heartbeatcreated.png)
+
+### Incidents & alerts
+![Incidents](docs/screenshots/incidents.png)
+
+![Incident email in Mailhog](docs/screenshots/incident-email.png)
+
+### Public status page
+![Public status page](docs/screenshots/public-status-page.png)
+
 ## Quick Start (Docker)
 
 ```bash

@@ -95,7 +95,7 @@ class DemoSeeder extends Seeder
         $this->command?->line('  Status:    '.rtrim((string) config('app.url'), '/').'/status/production');
         $this->command?->line('  Heartbeat: '.$pingUrl);
         $this->command?->line('  Curl:      curl -X POST '.$pingUrl);
-        $this->command?->line('  Tip:       Pause/edit “Broken endpoint (demo)” or wait for scheduler to open an incident.');
+        $this->command?->line('  Tip:       Pause/edit "Broken endpoint (demo)" or wait for scheduler to open an incident.');
     }
 
     /**
